@@ -19,9 +19,9 @@ type Session struct {
 	expiration time.Time
 }
 
-func login(pw string, UserID int, db *sql.DB) (Session, error) {
+func Login(pw string, Email string, db *sql.DB) (Session, error) {
 	var user structs.User
-	rows, err := db.Query("select id, name, email, password from auth.users where id = ?", UserID)
+	rows, err := db.Query("select id, name, email, password from auth.users where email = ?", Email)
 	if err != nil {
 		fmt.Println("Error fetching user info:", err)
 		return Session{}, nil
