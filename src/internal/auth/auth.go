@@ -1,5 +1,7 @@
 package auth
 
+//Login endpoint will return session ID to client
+//Other endpoints will ingest session ID from client
 import (
 	"crypto/sha256"
 	"database/sql"
