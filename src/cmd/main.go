@@ -13,15 +13,19 @@ func main() {
 
 	Database := dao.Database{
 		Driver: "mysql",
-		DS:     "test",
+		DS:     "root:testing@tcp(localhost:3306)/prim",
 	}
 
 	db, err := Database.New()
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Invalid path")
 	})
 	http.HandleFunc("/api/login", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.PostFormValue("password"))
 		sess, err := auth.Login(r.PostFormValue("password"), r.PostFormValue("email"), db)
 		if err != nil {
 			fmt.Println("Cannot login: ", err)

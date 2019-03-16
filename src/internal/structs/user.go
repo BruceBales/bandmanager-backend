@@ -3,8 +3,8 @@ package structs
 //Heavily tied to the auth package
 
 type User struct {
-	ID       int
-	Name     string
-	Email    string
-	Password string //Sha256 password, comes from a DB on our end
+	ID       int    `db:"id"`
+	Name     string `db:"name"`
+	Email    string `db:"email"`
+	Password string `db:"password"` //Sha256 password, comes from a DB on our end
 }

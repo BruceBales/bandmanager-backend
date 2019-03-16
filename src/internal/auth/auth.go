@@ -20,22 +20,27 @@ type Session struct {
 }
 
 func Login(pw string, Email string, db *sql.DB) (Session, error) {
-	var user structs.User
-	rows, err := db.Query("select id, name, email, password from auth.users where email = ?", Email)
+	user := structs.User{}
+	rows, err := db.Query("SELECT id, name, email, password FROM prim.users WHERE email = ? limit 1", Email)
 	if err != nil {
 		fmt.Println("Error fetching user info:", err)
 		return Session{}, nil
 	}
-	rows.Scan(user)
+	for rows.Next() {
+		err = rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+		if err != nil {
+			fmt.Println("Error scanning user data: ", err)
+		}
+	}
+	sha256_hash := fmt.Sprintf("%x", sha256.Sum256([]byte(pw)))
 
-	pass := sha256.Sum256([]byte(pw))
-
-	if string(pass[:]) != user.Password {
+	if string(sha256_hash) != user.Password {
+		fmt.Println("Real pass: ", user.Password)
 		return Session{}, fmt.Errorf("User credentials are invalid")
 	}
 
 	seed := rand.Int()
-	sessionID := sha256.Sum256([]byte(strconv.Itoa(seed)))
+	sessionID := fmt.Sprintf("%x", sha256.Sum256([]byte(strconv.Itoa(seed))))
 
 	return Session{
 		ID:         string(sessionID[:]),
