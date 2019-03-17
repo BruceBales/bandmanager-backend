@@ -11,9 +11,11 @@ import (
 
 func main() {
 
+	conf := getConfig()
+
 	Database := dao.Database{
 		Driver: "mysql",
-		DS:     "root:testing@tcp(localhost:3306)/prim",
+		DS:     fmt.Sprintf("%s:%s@tcp(%s:%s)/prim", conf.mysqlUser, conf.mysqlPass, conf.mysqlHost, conf.mysqlPort),
 	}
 
 	db, err := Database.New()
@@ -25,7 +27,6 @@ func main() {
 		fmt.Fprintf(w, "Invalid path")
 	})
 	http.HandleFunc("/api/login", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.PostFormValue("password"))
 		sess, err := auth.Login(r.PostFormValue("password"), r.PostFormValue("email"), db)
 		if err != nil {
 			fmt.Println("Cannot login: ", err)

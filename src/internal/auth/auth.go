@@ -35,7 +35,6 @@ func Login(pw string, Email string, db *sql.DB) (Session, error) {
 	sha256_hash := fmt.Sprintf("%x", sha256.Sum256([]byte(pw)))
 
 	if string(sha256_hash) != user.Password {
-		fmt.Println("Real pass: ", user.Password)
 		return Session{}, fmt.Errorf("User credentials are invalid")
 	}
 
