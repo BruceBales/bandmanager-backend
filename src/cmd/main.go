@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bbales/bandmanager-backend/src/internal/auth"
-	"github.com/bbales/bandmanager-backend/src/internal/dao"
+	"github.com/brucebales/bandmanager-backend/src/internal/auth"
+	"github.com/brucebales/bandmanager-backend/src/internal/dao"
 )
 
 func main() {

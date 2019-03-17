@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bbales/bandmanager-backend/src/internal/structs"
+	"github.com/brucebales/bandmanager-backend/src/internal/structs"
 )
 
 type Session struct {
