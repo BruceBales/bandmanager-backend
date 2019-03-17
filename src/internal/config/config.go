@@ -1,19 +1,20 @@
-package main
+package config
 
 import "os"
 
 type config struct {
-	mysqlUser string
-	mysqlPass string
-	mysqlHost string
-	mysqlPort string
+	MysqlUser string
+	MysqlPass string
+	MysqlHost string
+	MysqlPort string
 
-	redisUser string
-	redisPass string
-	redisHost string
+	RedisUser string
+	RedisPass string
+	RedisHost string
+	RedisPort string
 }
 
-func getConfig() config {
+func GetConfig() config {
 	//Hmm, my naming conventions kinda suck
 	mysqlDriver := os.Getenv("DB_DRIVER")
 	if mysqlDriver == "" {
@@ -36,21 +37,27 @@ func getConfig() config {
 		mysqlPort = "3306"
 	}
 
-	redisUser := os.Getenv("REDIS_USER") //Redis Username and Password are intentionally blank on
+	//Redis Username and Password are intentionally blank on Localhost
+	redisUser := os.Getenv("REDIS_USER")
 	redisPass := os.Getenv("REDIS_PASS")
 	redisHost := os.Getenv("REDIS_HOST")
 	if redisHost == "" {
 		redisHost = "localhost"
 	}
+	redisPort := os.Getenv("REDIS_PORT")
+	if redisPort == "" {
+		redisPort = "6379"
+	}
 
 	return config{
-		mysqlUser: mysqlUser,
-		mysqlPass: mysqlPass,
-		mysqlHost: mysqlHost,
-		mysqlPort: mysqlPort,
+		MysqlUser: mysqlUser,
+		MysqlPass: mysqlPass,
+		MysqlHost: mysqlHost,
+		MysqlPort: mysqlPort,
 
-		redisUser: redisUser,
-		redisPass: redisPass,
-		redisHost: redisHost,
+		RedisUser: redisUser,
+		RedisPass: redisPass,
+		RedisHost: redisHost,
+		RedisPort: redisPort,
 	}
 }

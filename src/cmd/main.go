@@ -6,16 +6,17 @@ import (
 	"net/http"
 
 	"github.com/brucebales/bandmanager-backend/src/internal/auth"
+	"github.com/brucebales/bandmanager-backend/src/internal/config"
 	"github.com/brucebales/bandmanager-backend/src/internal/dao"
 )
 
 func main() {
 
-	conf := getConfig()
+	conf := config.GetConfig()
 
 	Database := dao.Database{
 		Driver: "mysql",
-		DS:     fmt.Sprintf("%s:%s@tcp(%s:%s)/prim", conf.mysqlUser, conf.mysqlPass, conf.mysqlHost, conf.mysqlPort),
+		DS:     fmt.Sprintf("%s:%s@tcp(%s:%s)/prim", conf.MysqlUser, conf.MysqlPass, conf.MysqlHost, conf.MysqlPort),
 	}
 
 	db, err := Database.New()

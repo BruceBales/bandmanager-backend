@@ -10,13 +10,23 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/brucebales/bandmanager-backend/src/internal/dao"
 	"github.com/brucebales/bandmanager-backend/src/internal/structs"
 )
 
 type Session struct {
 	ID         string
 	UserID     int
-	expiration time.Time
+	Expiration time.Duration
+}
+
+func setSession(Session Session) {
+	//Redis key is session ID, value is user ID.
+	//Intention is that future functions will have
+	//Session ID passed from client, and get a User ID
+	//From that.
+	redis := dao.NewRedis()
+	redis.Set(Session.ID, Session.UserID, Session.Expiration)
 }
 
 func Login(pw string, Email string, db *sql.DB) (Session, error) {
@@ -41,9 +51,12 @@ func Login(pw string, Email string, db *sql.DB) (Session, error) {
 	seed := rand.Int()
 	sessionID := fmt.Sprintf("%x", sha256.Sum256([]byte(strconv.Itoa(seed))))
 
-	return Session{
+	session := Session{
 		ID:         string(sessionID[:]),
 		UserID:     user.ID,
-		expiration: time.Now().Add(8 * time.Hour),
-	}, nil
+		Expiration: 8 * time.Hour,
+	}
+	//Sending session to Redis
+	setSession(session)
+	return session, nil
 }
