@@ -44,13 +44,13 @@
         - I will likely never need this, but I want to be able to just so I can feel cool.
 
 ##Plan of Attack
+
     - Build user system with sessions that expire.
         - Backend endpoint that validates login info, returns session ID
         - Session ID eventually runs out of time, forcing user to login again
         - Login endpoint takes credential input, returns session ID
         - Other endpoints use session ID to match user info
-        - Session ID's NEVER FUCKING MAKE IT OUTSIDE OF PHP IN THE FRONTENT.
-          DO NOT BE LIKE FACEBOOK. PHP will have it's own session management that
+        - Session ID's shouldn't be visible to the user. PHP will have it's own session management that
           will correlate to the backend session ID, but will never make it available
           to a browser.
     - Build endpoints for band-related actions
