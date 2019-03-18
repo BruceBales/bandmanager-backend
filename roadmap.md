@@ -16,6 +16,7 @@
     - Show system allowing bands and venues to book "shows" that show up on the calendar
 
 ##Long-term Goals
+
     - Project Management feature
         - File storage for demos, STEMS, chord sheets, ect.
         - Version management for project files
