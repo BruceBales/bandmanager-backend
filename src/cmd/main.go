@@ -31,10 +31,17 @@ func main() {
 		sess, err := auth.Login(r.PostFormValue("password"), r.PostFormValue("email"), db)
 		if err != nil {
 			fmt.Println("Cannot login: ", err)
+			w.WriteHeader(401)
+			fmt.Fprintf(w, "Cannot login: %s", err)
 		}
 		session, err := json.Marshal(sess)
 		if err != nil {
 			fmt.Println("Cannot unmarshall JSON: ", err)
+			w.WriteHeader(500)
+			//Using Sha256 hash of error description to mark where error is happening in code.
+			//This allows me to quickly itentify where an error is happening without
+			//Giving too many details to anyone else who might be using the API.
+			fmt.Fprintf(w, "Internal server error: b4bb70ea0a801c3d0286c2c4678b01a36a28a5a4e4e36d1a1b95a4b42fed2ffd")
 		}
 		fmt.Fprintf(w, string(session))
 	})
