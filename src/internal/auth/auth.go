@@ -60,3 +60,14 @@ func Login(pw string, Email string, db *sql.DB) (Session, error) {
 	setSession(session)
 	return session, nil
 }
+
+func CreateUSer(name, email, password string, db *sql.DB) error {
+	// Sha256-ing password before insert
+	pw := fmt.Sprintf("%x", sha256.Sum256([]byte(password)))
+
+	_, err := db.Exec("INSERT INTO prim.users (name, email, password) VALUES (?, ?, ?)", name, email, pw)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -24,10 +24,13 @@ func main() {
 		fmt.Println(err)
 	}
 
+	/* --- Root Endpoint --- */
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Invalid path")
 	})
-	http.HandleFunc("/api/login", func(w http.ResponseWriter, r *http.Request) {
+
+	/* --- Auth Endpoints --- */
+	http.HandleFunc("/api/auth/login", func(w http.ResponseWriter, r *http.Request) {
 		sess, err := auth.Login(r.PostFormValue("password"), r.PostFormValue("email"), db)
 		if err != nil {
 			fmt.Println("Cannot login: ", err)
@@ -36,14 +39,26 @@ func main() {
 		}
 		session, err := json.Marshal(sess)
 		if err != nil {
-			fmt.Println("Cannot unmarshall JSON: ", err)
+			//Error hash included in Println so that it can be easily searched in server logs
+			fmt.Println("[b4bb70ea0a801c3d0286c2c4678b01a36a28a5a4e4e36d1a1b95a4b42fed2ffd] Cannot unmarshall JSON: ", err)
 			w.WriteHeader(500)
-			//Using Sha256 hash of error description to mark where error is happening in code.
-			//This allows me to quickly itentify where an error is happening without
-			//Giving too many details to anyone else who might be using the API.
+			//Error hash returned in HTTP response so that whoever sees it can report it but won't accidentally see
+			//an internal error message from Go.
 			fmt.Fprintf(w, "Internal server error: b4bb70ea0a801c3d0286c2c4678b01a36a28a5a4e4e36d1a1b95a4b42fed2ffd")
 		}
 		fmt.Fprintf(w, string(session))
+	})
+	http.HandleFunc("/api/auth/register", func(w http.ResponseWriter, r *http.Request) {
+		err := auth.CreateUSer(r.PostFormValue("name"), r.PostFormValue("email"), r.PostFormValue("password"), db)
+		switch err {
+		case nil:
+			fmt.Fprintf(w, "Success!")
+			break
+		default:
+			fmt.Println("[a9e64a7b779c290fe1918e819f59a560720cb757b433e20fc16042555acecd35] - Cannot create user: ", err)
+			w.WriteHeader(400)
+			fmt.Fprintf(w, "Cannot create user: a9e64a7b779c290fe1918e819f59a560720cb757b433e20fc16042555acecd35")
+		}
 	})
 
 	err = http.ListenAndServe(":1226", nil)
