@@ -1,6 +1,6 @@
-#Band Management Platform
+# Band Management Platform
 
-##Short-term Goals
+## Short-term Goals
 
     - Band system allowing users to form/join "bands"
         - Band Calendar allowing users to mark days as unavailable or available
@@ -15,7 +15,7 @@
     - Venue system allowing users to create venues, and link other members as staff
     - Show system allowing bands and venues to book "shows" that show up on the calendar
 
-##Long-term Goals
+## Long-term Goals
 
     - Project Management feature
         - File storage for demos, STEMS, chord sheets, ect.
@@ -25,7 +25,7 @@
     -Collaboration marketplace
 
 
-##Design Goals
+## Design Goals
 
     - Absolutely all logic relating to the service itself must happen in the Go Backend
         - I might split the backend into multiple services, but overall, it is critical that everything
@@ -44,7 +44,7 @@
         - Memcached and Redis will be useful for this.
         - I will likely never need this, but I want to be able to just so I can feel cool.
 
-##Plan of Attack
+## Plan of Attack
 
     - Build user system with sessions that expire.
         - Backend endpoint that validates login info, returns session ID
