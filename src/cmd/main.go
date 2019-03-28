@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/brucebales/bandmanager-backend/src/internal/auth"
 	"github.com/brucebales/bandmanager-backend/src/internal/config"
@@ -30,6 +31,7 @@ func main() {
 	})
 
 	/* --- Auth Endpoints --- */
+	//Login
 	http.HandleFunc("/api/auth/login", func(w http.ResponseWriter, r *http.Request) {
 		sess, err := auth.Login(r.PostFormValue("password"), r.PostFormValue("email"), db)
 		if err != nil {
@@ -48,6 +50,7 @@ func main() {
 		}
 		fmt.Fprintf(w, string(session))
 	})
+	//Register
 	http.HandleFunc("/api/auth/register", func(w http.ResponseWriter, r *http.Request) {
 		err := auth.CreateUSer(r.PostFormValue("name"), r.PostFormValue("email"), r.PostFormValue("password"), db)
 		switch err {
@@ -57,7 +60,11 @@ func main() {
 		default:
 			fmt.Println("[a9e64a7b779c290fe1918e819f59a560720cb757b433e20fc16042555acecd35] - Cannot create user: ", err)
 			w.WriteHeader(400)
-			fmt.Fprintf(w, "Cannot create user: a9e64a7b779c290fe1918e819f59a560720cb757b433e20fc16042555acecd35")
+			if strings.Contains(fmt.Sprint(err), "Duplicate entry") {
+				fmt.Fprintf(w, "Cannot create user: email already in use")
+			} else {
+				fmt.Fprintf(w, "Cannot create user: a9e64a7b779c290fe1918e819f59a560720cb757b433e20fc16042555acecd35")
+			}
 		}
 	})
 
