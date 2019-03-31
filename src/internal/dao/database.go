@@ -1,15 +1,17 @@
 package dao
 
-import "database/sql"
-import _ "github.com/go-sql-driver/mysql"
+import (
+	"database/sql"
+	"fmt"
 
-type Database struct {
-	Driver string
-	DS     string
-}
+	"github.com/brucebales/bandmanager-backend/src/internal/config"
+	_ "github.com/go-sql-driver/mysql"
+)
 
-func (d Database) New() (*sql.DB, error) {
-	db, err := sql.Open(d.Driver, d.DS)
+func NewMysql() (*sql.DB, error) {
+	conf := config.GetConfig()
+
+	db, err := sql.Open(conf.MysqlDriver, fmt.Sprintf("%s:%s@tcp(%s:%s)/prim", conf.MysqlUser, conf.MysqlPass, conf.MysqlHost, conf.MysqlPort))
 	if err != nil {
 		return nil, err
 	}

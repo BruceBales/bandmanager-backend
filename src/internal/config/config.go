@@ -3,10 +3,11 @@ package config
 import "os"
 
 type config struct {
-	MysqlUser string
-	MysqlPass string
-	MysqlHost string
-	MysqlPort string
+	MysqlUser   string
+	MysqlPass   string
+	MysqlHost   string
+	MysqlPort   string
+	MysqlDriver string
 
 	RedisUser string
 	RedisPass string
@@ -50,10 +51,11 @@ func GetConfig() config {
 	}
 
 	return config{
-		MysqlUser: mysqlUser,
-		MysqlPass: mysqlPass,
-		MysqlHost: mysqlHost,
-		MysqlPort: mysqlPort,
+		MysqlUser:   mysqlUser,
+		MysqlPass:   mysqlPass,
+		MysqlHost:   mysqlHost,
+		MysqlPort:   mysqlPort,
+		MysqlDriver: mysqlDriver,
 
 		RedisUser: redisUser,
 		RedisPass: redisPass,

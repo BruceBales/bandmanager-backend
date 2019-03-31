@@ -7,23 +7,9 @@ import (
 	"strings"
 
 	"github.com/brucebales/bandmanager-backend/src/internal/auth"
-	"github.com/brucebales/bandmanager-backend/src/internal/config"
-	"github.com/brucebales/bandmanager-backend/src/internal/dao"
 )
 
 func main() {
-
-	conf := config.GetConfig()
-
-	Database := dao.Database{
-		Driver: "mysql",
-		DS:     fmt.Sprintf("%s:%s@tcp(%s:%s)/prim", conf.MysqlUser, conf.MysqlPass, conf.MysqlHost, conf.MysqlPort),
-	}
-
-	db, err := Database.New()
-	if err != nil {
-		fmt.Println(err)
-	}
 
 	/* --- Root Endpoint --- */
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +19,7 @@ func main() {
 	/* --- Auth Endpoints --- */
 	//Login
 	http.HandleFunc("/api/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		sess, err := auth.Login(r.PostFormValue("password"), r.PostFormValue("email"), db)
+		sess, err := auth.Login(r.PostFormValue("password"), r.PostFormValue("email"))
 		if err != nil {
 			fmt.Println("Cannot login: ", err)
 			w.WriteHeader(401)
@@ -52,7 +38,7 @@ func main() {
 	})
 	//Register
 	http.HandleFunc("/api/auth/register", func(w http.ResponseWriter, r *http.Request) {
-		err := auth.CreateUSer(r.PostFormValue("name"), r.PostFormValue("email"), r.PostFormValue("password"), db)
+		err := auth.CreateUser(r.PostFormValue("name"), r.PostFormValue("email"), r.PostFormValue("password"))
 		switch err {
 		case nil:
 			fmt.Fprintf(w, "Success!")
@@ -68,7 +54,7 @@ func main() {
 		}
 	})
 
-	err = http.ListenAndServe(":1226", nil)
+	err := http.ListenAndServe(":1226", nil)
 	if err != nil {
 		fmt.Println("HTTP Serve Error: ", err)
 	}
