@@ -1,6 +1,8 @@
 package access
 
 import (
+	"fmt"
+
 	"github.com/brucebales/bandmanager-backend/src/internal/dao"
 	structs "github.com/brucebales/bandmanager-backend/src/internal/structs"
 )
@@ -8,7 +10,7 @@ import (
 //GetUser accesses a user's basic info, for internal endpoint use
 func GetUser(sessionId string) (structs.User, error) {
 
-	var user structs.User
+	var user = structs.User{}
 
 	redis := dao.NewRedis()
 	defer redis.Close()
@@ -24,9 +26,16 @@ func GetUser(sessionId string) (structs.User, error) {
 		return structs.User{}, err
 	}
 
-	rows, err := mysql.Query("SELECT id, name, email, password FROM prim.users WHERE id = ?", userid)
+	rows, err := mysql.Query("SELECT id, name, email FROM prim.users WHERE id = ?", userid)
 
-	err = rows.Scan(user)
+	for rows.Next() {
+		err = rows.Scan(&user.ID, &user.Name, &user.Email)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	fmt.Println(user)
 
 	return user, nil
 }

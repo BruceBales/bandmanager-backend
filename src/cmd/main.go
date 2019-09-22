@@ -5,15 +5,41 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 
+	"github.com/brucebales/bandmanager-backend/src/internal/access"
 	"github.com/brucebales/bandmanager-backend/src/internal/auth"
 )
 
 func main() {
 
+	wg := new(sync.WaitGroup)
+
+	createBandChan := make(chan access.CreateBandJob)
+
+	wg.Add(1)
+	go access.CreateBandWorker(createBandChan, wg)
+
 	/* --- Root Endpoint --- */
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Invalid path")
+	})
+
+	/* --- Business Logic Endpoints --- */
+	//Create Band Endpoint.
+	http.HandleFunc("/band/create", func(w http.ResponseWriter, r *http.Request) {
+		sess := r.Header.Get("session_id")
+		user, err := access.GetUser(sess)
+		if err != nil {
+			fmt.Fprintf(w, "Error getting user info")
+		}
+		crband := access.CreateBandJob{
+			Name:        r.PostFormValue("name"),
+			Description: r.PostFormValue("description"),
+			User:        user,
+		}
+		createBandChan <- crband
+		fmt.Fprintf(w, "Success")
 	})
 
 	/* --- Auth Endpoints --- */
