@@ -30,6 +30,9 @@ func setSession(Session Session) {
 
 func Login(pw string, Email string) (Session, error) {
 	db, err := dao.NewMysql()
+	if err != nil {
+		return Session{}, err
+	}
 
 	user := structs.User{}
 	rows, err := db.Query("SELECT id, name, email, password FROM prim.users WHERE email = ? limit 1", Email)
@@ -43,8 +46,8 @@ func Login(pw string, Email string) (Session, error) {
 			fmt.Println("Error scanning user data: ", err)
 		}
 	}
-	sha256_hash := fmt.Sprintf("%x", sha256.Sum256([]byte(pw)))
 
+	sha256_hash := fmt.Sprintf("%x", sha256.Sum256([]byte(pw)))
 	if string(sha256_hash) != user.Password {
 		return Session{}, fmt.Errorf("User credentials are invalid")
 	}
