@@ -35,8 +35,6 @@ func GetUser(sessionId string) (structs.User, error) {
 		}
 	}
 
-	fmt.Println(user)
-
 	return user, nil
 }
 

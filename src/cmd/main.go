@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -40,6 +41,25 @@ func main() {
 		}
 		createBandChan <- crband
 		fmt.Fprintf(w, "Success")
+	})
+
+	//Get Band Endpoint
+	http.HandleFunc("/band/info", func(w http.ResponseWriter, r *http.Request) {
+		sess := r.Header.Get("session_id")
+		user, err := access.GetUser(sess)
+		if err != nil {
+			fmt.Fprintf(w, "Error getting user info")
+		}
+		bandID, err := strconv.Atoi(r.PostFormValue("band_id"))
+		if err != nil {
+			fmt.Fprintf(w, "band_id must be an integer")
+		}
+		bandInfo, err := access.GetBandInfo(bandID, user.ID)
+		if err != nil {
+			fmt.Println("Could not get band: ", err)
+		}
+		bandBytes, err := json.Marshal(bandInfo)
+		fmt.Fprintf(w, string(bandBytes))
 	})
 
 	/* --- Auth Endpoints --- */

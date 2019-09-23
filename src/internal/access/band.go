@@ -42,11 +42,10 @@ func CreateBandWorker(j <-chan CreateBandJob, wg *sync.WaitGroup) error {
 }
 
 //GetBandInfo fetches a band's info from it's ID
-func GetBandInfo(bandID int) (structs.Band, error) {
+func GetBandInfo(bandID, userID int) (structs.Band, error) {
 
 	band := structs.Band{}
-
-	members := []structs.Member{}
+	members := make([]structs.Member, 0)
 
 	mysql, err := dao.NewMysql()
 	if err != nil {
@@ -54,22 +53,34 @@ func GetBandInfo(bandID int) (structs.Band, error) {
 	}
 	defer mysql.Close()
 
-	rows, err := mysql.Query("SELECT name, description FROM prim.bands WHERE id = ? LIMIT 1", bandID)
+	rows, err := mysql.Query("SELECT id, name, description FROM prim.bands WHERE id = ? LIMIT 1", bandID)
 	if err != nil {
 		return structs.Band{}, err
 	}
-
-	rows.Scan(band)
+	for rows.Next() {
+		rows.Scan(&band.ID, &band.Name, &band.Description)
+	}
 
 	rows, err = mysql.Query("SELECT user_id, name, role, acl FROM prim.bands_members WHERE band_id = ?", bandID)
-
-	for i := 0; rows.Next(); i++ {
-		err = rows.Scan(members[i])
+	for rows.Next() {
+		memb := structs.Member{}
+		err = rows.Scan(&memb.UserID, &memb.Name, &memb.Role, &memb.ACL)
 		if err != nil {
 			return structs.Band{}, err
 		}
+		members = append(members, memb)
 	}
 	band.Members = members
+
+	var permitted = false
+	for _, m := range members {
+		if m.UserID == userID && m.ACL >= 1 {
+			permitted = true
+		}
+	}
+	if !permitted {
+		return structs.Band{}, fmt.Errorf("User is not permitted to view this band's info")
+	}
 
 	return band, nil
 }
