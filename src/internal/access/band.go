@@ -1,10 +1,10 @@
 package access
 
 import (
+	"database/sql"
 	"fmt"
 	"sync"
 
-	"github.com/brucebales/bandmanager-backend/src/internal/dao"
 	"github.com/brucebales/bandmanager-backend/src/internal/structs"
 )
 
@@ -16,15 +16,10 @@ type CreateBandJob struct {
 
 //CreateBandWorker creates new bands in the DB and adds the creator as the first member.
 //This function runs in async using the CreateBandJob struct.
-func CreateBandWorker(j <-chan CreateBandJob, wg *sync.WaitGroup) error {
-	mysql, err := dao.NewMysql()
-	if err != nil {
-		return err
-	}
-	defer mysql.Close()
+func CreateBandWorker(j <-chan CreateBandJob, wg *sync.WaitGroup, db *sql.DB) error {
 
 	for job := range j {
-		res, err := mysql.Exec("INSERT INTO prim.bands(name, description) VALUES(?, ?);", job.Name, job.Description)
+		res, err := db.Exec("INSERT INTO prim.bands(name, description) VALUES(?, ?);", job.Name, job.Description)
 		if err != nil {
 			fmt.Println("Could not create band: ", err)
 		}
@@ -32,7 +27,7 @@ func CreateBandWorker(j <-chan CreateBandJob, wg *sync.WaitGroup) error {
 		if err != nil {
 			fmt.Println("Could not find last inserted band ID")
 		}
-		_, err = mysql.Exec("INSERT INTO prim.bands_members(user_id, band_id, name, role, acl) VALUES(?, ?, ?, ?, ?);", job.User.ID, bandid, job.User.Name, "Founder", 4)
+		_, err = db.Exec("INSERT INTO prim.bands_members(user_id, band_id, name, role, acl) VALUES(?, ?, ?, ?, ?);", job.User.ID, bandid, job.User.Name, "Founder", 4)
 		if err != nil {
 			fmt.Println("Could not create band: ", err)
 		}
@@ -42,18 +37,12 @@ func CreateBandWorker(j <-chan CreateBandJob, wg *sync.WaitGroup) error {
 }
 
 //GetBandInfo fetches a band's info from it's ID
-func GetBandInfo(bandID, userID int) (structs.Band, error) {
+func GetBandInfo(bandID, userID int, db *sql.DB) (structs.Band, error) {
 
 	band := structs.Band{}
 	members := make([]structs.Member, 0)
 
-	mysql, err := dao.NewMysql()
-	if err != nil {
-		return structs.Band{}, err
-	}
-	defer mysql.Close()
-
-	rows, err := mysql.Query("SELECT id, name, description FROM prim.bands WHERE id = ? LIMIT 1", bandID)
+	rows, err := db.Query("SELECT id, name, description FROM prim.bands WHERE id = ? LIMIT 1", bandID)
 	if err != nil {
 		return structs.Band{}, err
 	}
@@ -61,7 +50,7 @@ func GetBandInfo(bandID, userID int) (structs.Band, error) {
 		rows.Scan(&band.ID, &band.Name, &band.Description)
 	}
 
-	rows, err = mysql.Query("SELECT user_id, name, role, acl FROM prim.bands_members WHERE band_id = ?", bandID)
+	rows, err = db.Query("SELECT user_id, name, role, acl FROM prim.bands_members WHERE band_id = ?", bandID)
 	for rows.Next() {
 		memb := structs.Member{}
 		err = rows.Scan(&memb.UserID, &memb.Name, &memb.Role, &memb.ACL)

@@ -4,6 +4,7 @@ package auth
 //Other endpoints will ingest session ID from client
 import (
 	"crypto/sha256"
+	"database/sql"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -28,11 +29,7 @@ func setSession(Session Session) {
 	redis.Set(Session.ID, Session.UserID, Session.Expiration)
 }
 
-func Login(pw string, Email string) (Session, error) {
-	db, err := dao.NewMysql()
-	if err != nil {
-		return Session{}, err
-	}
+func Login(pw string, Email string, db *sql.DB) (Session, error) {
 
 	user := structs.User{}
 	rows, err := db.Query("SELECT id, name, email, password FROM prim.users WHERE email = ? limit 1", Email)
@@ -65,15 +62,11 @@ func Login(pw string, Email string) (Session, error) {
 	return session, nil
 }
 
-func CreateUser(name, email, password string) error {
-	db, err := dao.NewMysql()
-	if err != nil {
-		return err
-	}
+func CreateUser(name, email, password string, db *sql.DB) error {
 	// Sha256-ing password before insert
 	pw := fmt.Sprintf("%x", sha256.Sum256([]byte(password)))
 
-	_, err = db.Exec("INSERT INTO prim.users (name, email, password) VALUES (?, ?, ?)", name, email, pw)
+	_, err := db.Exec("INSERT INTO prim.users (name, email, password) VALUES (?, ?, ?)", name, email, pw)
 	if err != nil {
 		return err
 	}

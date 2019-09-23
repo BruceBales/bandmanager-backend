@@ -10,16 +10,23 @@ import (
 
 	"github.com/brucebales/bandmanager-backend/src/internal/access"
 	"github.com/brucebales/bandmanager-backend/src/internal/auth"
+	"github.com/brucebales/bandmanager-backend/src/internal/dao"
 )
 
 func main() {
+
+	db, err := dao.NewMysql()
+	if err != nil {
+		fmt.Println("Failed to connect to db: ", err)
+	}
+	defer db.Close()
 
 	wg := new(sync.WaitGroup)
 
 	createBandChan := make(chan access.CreateBandJob)
 
 	wg.Add(1)
-	go access.CreateBandWorker(createBandChan, wg)
+	go access.CreateBandWorker(createBandChan, wg, db)
 
 	/* --- Root Endpoint --- */
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +37,7 @@ func main() {
 	//Create Band Endpoint.
 	http.HandleFunc("/band/create", func(w http.ResponseWriter, r *http.Request) {
 		sess := r.Header.Get("session_id")
-		user, err := access.GetUser(sess)
+		user, err := access.GetUser(sess, db)
 		if err != nil {
 			fmt.Fprintf(w, "Error getting user info")
 		}
@@ -46,7 +53,7 @@ func main() {
 	//Get Band Endpoint
 	http.HandleFunc("/band/info", func(w http.ResponseWriter, r *http.Request) {
 		sess := r.Header.Get("session_id")
-		user, err := access.GetUser(sess)
+		user, err := access.GetUser(sess, db)
 		if err != nil {
 			fmt.Fprintf(w, "Error getting user info")
 		}
@@ -54,7 +61,7 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(w, "band_id must be an integer")
 		}
-		bandInfo, err := access.GetBandInfo(bandID, user.ID)
+		bandInfo, err := access.GetBandInfo(bandID, user.ID, db)
 		if err != nil {
 			fmt.Println("Could not get band: ", err)
 		}
@@ -65,7 +72,7 @@ func main() {
 	/* --- Auth Endpoints --- */
 	//Login
 	http.HandleFunc("/api/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		sess, err := auth.Login(r.PostFormValue("password"), r.PostFormValue("email"))
+		sess, err := auth.Login(r.PostFormValue("password"), r.PostFormValue("email"), db)
 		if err != nil {
 			fmt.Println("Cannot login: ", err)
 			w.WriteHeader(401)
@@ -84,7 +91,7 @@ func main() {
 	})
 	//Register
 	http.HandleFunc("/api/auth/register", func(w http.ResponseWriter, r *http.Request) {
-		err := auth.CreateUser(r.PostFormValue("name"), r.PostFormValue("email"), r.PostFormValue("password"))
+		err := auth.CreateUser(r.PostFormValue("name"), r.PostFormValue("email"), r.PostFormValue("password"), db)
 		switch err {
 		case nil:
 			fmt.Fprintf(w, "Success!")
@@ -100,7 +107,7 @@ func main() {
 		}
 	})
 
-	err := http.ListenAndServe(":1226", nil)
+	err = http.ListenAndServe(":1226", nil)
 	if err != nil {
 		fmt.Println("HTTP Serve Error: ", err)
 	}
