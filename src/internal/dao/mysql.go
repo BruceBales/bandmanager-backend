@@ -8,7 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func NewMysql() (*sql.DB, error) {
+func NewDB() (*sql.DB, error) {
 	conf := config.GetConfig()
 
 	db, err := sql.Open(conf.MysqlDriver, fmt.Sprintf("%s:%s@tcp(%s:%s)/prim", conf.MysqlUser, conf.MysqlPass, conf.MysqlHost, conf.MysqlPort))
