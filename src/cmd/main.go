@@ -32,7 +32,11 @@ func main() {
 	wg.Add(1)
 	go access.EditBandWorker(editBandChan, wg, db)
 
+	channels := access.WorkerChannels{
+		CreateBandChan: createBandChan,
+		EditBandChan:   editBandChan,
+	}
+
 	//Start HTTP server
-	//TODO: Combine channels so that this doesn't get nasty
-	api.Serve(createBandChan, editBandChan, db)
+	api.Serve(channels, db)
 }

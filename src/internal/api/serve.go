@@ -13,7 +13,7 @@ import (
 )
 
 //Serve handles actual HTTP connections to the API
-func Serve(createBandChan chan<- access.CreateBandJob, editBandChan chan<- access.EditBandJob, db *sql.DB) {
+func Serve(channels access.WorkerChannels, db *sql.DB) {
 	/* --- Root Endpoint --- */
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Invalid path")
@@ -32,7 +32,7 @@ func Serve(createBandChan chan<- access.CreateBandJob, editBandChan chan<- acces
 			Description: r.PostFormValue("description"),
 			User:        user,
 		}
-		createBandChan <- crband
+		channels.CreateBandChan <- crband
 		fmt.Fprintf(w, "Success")
 	})
 
@@ -55,7 +55,7 @@ func Serve(createBandChan chan<- access.CreateBandJob, editBandChan chan<- acces
 			Description: r.PostFormValue("description"),
 			User:        user,
 		}
-		editBandChan <- editBand
+		channels.EditBandChan <- editBand
 		fmt.Fprintf(w, "Success")
 	})
 
