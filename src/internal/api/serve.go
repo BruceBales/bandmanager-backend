@@ -22,39 +22,34 @@ func Serve(channels access.WorkerChannels, db *sql.DB) {
 	/* --- Business Logic Endpoints --- */
 	//Create Band Endpoint.
 	http.HandleFunc("/band/create", func(w http.ResponseWriter, r *http.Request) {
+		crband := access.CreateBandJob{}
+		d := json.NewDecoder(r.Body)
+		d.Decode(&crband)
+
 		sess := r.Header.Get("session_id")
 		user, err := access.GetUser(sess, db)
 		if err != nil {
 			fmt.Fprintf(w, "Error getting user info")
 		}
-		crband := access.CreateBandJob{
-			Name:        r.PostFormValue("name"),
-			Description: r.PostFormValue("description"),
-			User:        user,
-		}
+		crband.User = user
 		channels.CreateBandChan <- crband
 		fmt.Fprintf(w, "Success")
 	})
 
 	//Edit Band Endpoint
 	http.HandleFunc("/band/edit", func(w http.ResponseWriter, r *http.Request) {
+
+		editBand := access.EditBandJob{}
+		d := json.NewDecoder(r.Body)
+		d.Decode(&editBand)
+
 		sess := r.Header.Get("session_id")
 		user, err := access.GetUser(sess, db)
 		if err != nil {
 			fmt.Fprintf(w, "Error getting user info")
 		}
+		editBand.User = user
 
-		bandID, err := strconv.Atoi(r.PostFormValue("band_id"))
-		if err != nil {
-			fmt.Fprintf(w, "band_id must be an integer")
-		}
-
-		editBand := access.EditBandJob{
-			ID:          bandID,
-			Name:        r.PostFormValue("name"),
-			Description: r.PostFormValue("description"),
-			User:        user,
-		}
 		channels.EditBandChan <- editBand
 		fmt.Fprintf(w, "Success")
 	})

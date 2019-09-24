@@ -10,16 +10,16 @@ import (
 
 //CreateBandJob is the struct passed into the band creation channel
 type CreateBandJob struct {
-	Name        string
-	Description string
+	Name        string `json:"name"`
+	Description string `json:"description"`
 	User        structs.User
 }
 
 //EditBandJob is the struct passed into the band edit channel
 type EditBandJob struct {
-	ID          int
-	Name        string
-	Description string
+	ID          int    `json:"band_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 	User        structs.User
 }
 
@@ -71,7 +71,7 @@ func EditBandWorker(j <-chan EditBandJob, wg *sync.WaitGroup, db *sql.DB) error 
 				fmt.Println("Could not edit band: ", err)
 			}
 		} else {
-			fmt.Println("User requested unauthorized update: ", job.User.ID)
+			fmt.Println("User requested unauthorized update: ", job.User.ID, "Band ID: ", job.ID)
 		}
 	}
 	wg.Done()
