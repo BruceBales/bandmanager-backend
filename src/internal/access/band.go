@@ -66,7 +66,7 @@ func EditBandWorker(j <-chan EditBandJob, wg *sync.WaitGroup, db *sql.DB) error 
 			}
 		}
 		if permitted {
-			_, err = db.Exec("UPDATE prim.bands(name, description) VALUES(?, ?) WHERE id = ?;", job.Name, job.Description, job.ID)
+			_, err = db.Exec("UPDATE prim.bands SET name=?, description=? WHERE id = ?;", job.Name, job.Description, job.ID)
 			if err != nil {
 				fmt.Println("Could not edit band: ", err)
 			}

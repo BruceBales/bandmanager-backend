@@ -21,11 +21,18 @@ func main() {
 	//Create async waitgroup
 	wg := new(sync.WaitGroup)
 
-	//Create band creation channel
+	//Create needed job channels.
+	//Currently async is only being used for functions
+	//that modify database content
 	createBandChan := make(chan access.CreateBandJob)
+	editBandChan := make(chan access.EditBandJob)
 	//Spawn band creation worker
 	wg.Add(1)
 	go access.CreateBandWorker(createBandChan, wg, db)
+	wg.Add(1)
+	go access.EditBandWorker(editBandChan, wg, db)
 
-	api.Serve(createBandChan, db)
+	//Start HTTP server
+	//TODO: Combine channels so that this doesn't get nasty
+	api.Serve(createBandChan, editBandChan, db)
 }

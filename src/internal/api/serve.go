@@ -13,7 +13,7 @@ import (
 )
 
 //Serve handles actual HTTP connections to the API
-func Serve(createBandChan chan<- access.CreateBandJob, db *sql.DB) {
+func Serve(createBandChan chan<- access.CreateBandJob, editBandChan chan<- access.EditBandJob, db *sql.DB) {
 	/* --- Root Endpoint --- */
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Invalid path")
@@ -33,6 +33,29 @@ func Serve(createBandChan chan<- access.CreateBandJob, db *sql.DB) {
 			User:        user,
 		}
 		createBandChan <- crband
+		fmt.Fprintf(w, "Success")
+	})
+
+	//Edit Band Endpoint
+	http.HandleFunc("/band/edit", func(w http.ResponseWriter, r *http.Request) {
+		sess := r.Header.Get("session_id")
+		user, err := access.GetUser(sess, db)
+		if err != nil {
+			fmt.Fprintf(w, "Error getting user info")
+		}
+
+		bandID, err := strconv.Atoi(r.PostFormValue("band_id"))
+		if err != nil {
+			fmt.Fprintf(w, "band_id must be an integer")
+		}
+
+		editBand := access.EditBandJob{
+			ID:          bandID,
+			Name:        r.PostFormValue("name"),
+			Description: r.PostFormValue("description"),
+			User:        user,
+		}
+		editBandChan <- editBand
 		fmt.Fprintf(w, "Success")
 	})
 
