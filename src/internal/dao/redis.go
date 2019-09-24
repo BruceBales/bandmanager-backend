@@ -15,8 +15,10 @@ func NewRedis() *redis.Client {
 		Password: conf.RedisPass,
 		DB:       0,
 	})
-	pong, err := client.Ping().Result()
-	fmt.Println(pong, err)
+	_, err := client.Ping().Result()
+	if err != nil {
+		fmt.Println("Redis error: ", err)
+	}
 
 	return client
 
