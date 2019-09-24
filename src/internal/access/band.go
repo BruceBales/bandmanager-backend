@@ -23,6 +23,10 @@ type EditBandJob struct {
 	User        structs.User
 }
 
+type BandInfoRequest struct {
+	BandID int `json:"band_id"`
+}
+
 //CreateBandWorker creates new bands in the DB and adds the creator as the first member.
 //This function runs in async using the CreateBandJob struct.
 func CreateBandWorker(j <-chan CreateBandJob, wg *sync.WaitGroup, db *sql.DB) error {

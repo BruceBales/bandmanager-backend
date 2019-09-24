@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/brucebales/bandmanager-backend/src/internal/access"
@@ -56,16 +55,17 @@ func Serve(channels access.WorkerChannels, db *sql.DB) {
 
 	//Get Band Endpoint
 	http.HandleFunc("/band/info", func(w http.ResponseWriter, r *http.Request) {
+		req := access.BandInfoRequest{}
+		d := json.NewDecoder(r.Body)
+		d.Decode(&req)
+
 		sess := r.Header.Get("session_id")
 		user, err := access.GetUser(sess, db)
 		if err != nil {
 			fmt.Fprintf(w, "Error getting user info")
 		}
-		bandID, err := strconv.Atoi(r.PostFormValue("band_id"))
-		if err != nil {
-			fmt.Fprintf(w, "band_id must be an integer")
-		}
-		bandInfo, err := access.GetBandInfo(bandID, user.ID, db)
+
+		bandInfo, err := access.GetBandInfo(req.BandID, user.ID, db)
 		if err != nil {
 			fmt.Println("Could not get band: ", err)
 		}
