@@ -42,6 +42,8 @@ type BandInfoRequest struct {
 //In the future I will probably condense other worker functions into a similar model
 func MemberWorker(j <-chan MemberJob, r chan<- Response, wg *sync.WaitGroup, db *sql.DB) error {
 	for job := range j {
+		var message string
+		var respcode int
 		//Get requester's ACL
 		var acl int
 		rows, err := db.Query("SELECT acl FROM prim.bands_members WHERE user_id = ? and band_id = ?", job.UserID, job.BandID)
@@ -61,8 +63,16 @@ func MemberWorker(j <-chan MemberJob, r chan<- Response, wg *sync.WaitGroup, db 
 			if acl >= 4 {
 				_, err = db.Exec("INSERT INTO prim.bands_members(user_id, band_id, name, role, acl) VALUES(?, ?, ?, ?, ?);", job.Member.ID, job.BandID, job.Member.Name, job.Role, job.ACL)
 				if err != nil {
+					message = "Error adding user"
+					respcode = 400
 					fmt.Println("Could not insert user: ", err)
+				} else {
+					message = fmt.Sprintf("Added User %v to band %v", job.MemberID, job.BandID)
+					respcode = 200
 				}
+			} else {
+				message = fmt.Sprintf("User not authorized. User ID: %v", job.UserID)
+				respcode = 401
 			}
 		case "remove":
 			if acl >= 4 {
@@ -70,15 +80,17 @@ func MemberWorker(j <-chan MemberJob, r chan<- Response, wg *sync.WaitGroup, db 
 				if err != nil {
 					fmt.Println("Could not delete user: ", err)
 				}
+				message = fmt.Sprintf("Removed User %v from band %v", job.MemberID, job.BandID)
+				respcode = 200
 			}
 		default:
 			fmt.Println("Unrecognized action: ", job.Action)
 		}
 		r <- Response{
 			JobID:    job.JobID,
-			Err:      nil,
-			Message:  fmt.Sprintf("Action: %s, UserID: %v, BandID: %v", job.Action, job.MemberID, job.BandID),
-			HTTPCode: 200,
+			Err:      err,
+			Message:  message,
+			HTTPCode: respcode,
 		}
 	}
 	wg.Done()

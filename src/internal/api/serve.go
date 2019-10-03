@@ -82,8 +82,8 @@ func Serve(channels access.WorkerChannels, responseChan <-chan access.Response, 
 		channels.MemberChan <- membJob
 		for resp := range responseChan {
 			if resp.JobID == membJob.JobID {
-				fmt.Fprintf(w, resp.Message)
 				w.WriteHeader(resp.HTTPCode)
+				fmt.Fprintf(w, resp.Message)
 				return
 			}
 		}
