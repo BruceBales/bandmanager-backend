@@ -33,6 +33,22 @@ func GetUser(sessionId string, db *sql.DB) (structs.User, error) {
 	return user, nil
 }
 
+func GetUserByID(userId int, db *sql.DB) (structs.User, error) {
+	var user = structs.User{}
+
+	rows, err := db.Query("SELECT id, name, email FROM prim.users WHERE id = ?", userId)
+
+	for rows.Next() {
+		err = rows.Scan(&user.ID, &user.Name, &user.Email)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	return user, nil
+
+}
+
 //GetUserBands returns a list of bands that a user is a member of
 //Note that this only returns the ID
 func GetUserBands(userID int, db *sql.DB) ([]int, error) {

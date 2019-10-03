@@ -23,8 +23,59 @@ type EditBandJob struct {
 	User        structs.User
 }
 
+type MemberJob struct {
+	Action   string       `json:"action"`
+	UserID   int          `json:"user_id"` //User that is adding the new member
+	BandID   int          `json:"band_id"` //Band that the new member is being added to
+	Role     string       `json:"role"`
+	MemberID int          `json:"member_id"`
+	Member   structs.User //Member that is being added
+	ACL      int          `json:"acl"` //Initial ACL being granted to new member
+}
+
 type BandInfoRequest struct {
 	BandID int `json:"band_id"`
+}
+
+//MemberWorker performs editing operations on the bands_members table
+//In the future I will probably condense other worker functions into a similar model
+func MemberWorker(j <-chan MemberJob, wg *sync.WaitGroup, db *sql.DB) error {
+	for job := range j {
+		//Get requester's ACL
+		var acl int
+		rows, err := db.Query("SELECT acl FROM prim.bands_members WHERE user_id = ? and band_id = ?", job.UserID, job.BandID)
+		if err != nil {
+			fmt.Println("Could not determine ACL: ", err)
+		}
+		for rows.Next() {
+			err = rows.Scan(&acl)
+			if err != nil {
+				fmt.Println("Could not scan acl: ", err)
+			}
+		}
+
+		//Determine/do action
+		switch job.Action {
+		case "add":
+			if acl >= 4 {
+				_, err = db.Exec("INSERT INTO prim.bands_members(user_id, band_id, name, role, acl) VALUES(?, ?, ?, ?, ?);", job.Member.ID, job.BandID, job.Member.Name, job.Role, job.ACL)
+				if err != nil {
+					fmt.Println("Could not insert user: ", err)
+				}
+			}
+		case "remove":
+			if acl >= 4 {
+				_, err = db.Exec("DELETE FROM prim.bands_members WHERE band_id = ? AND user_id = ?;", job.BandID, job.Member.ID)
+				if err != nil {
+					fmt.Println("Could not delete user: ", err)
+				}
+			}
+		default:
+			fmt.Println("Unrecognized action: ", job.Action)
+		}
+	}
+	wg.Done()
+	return nil
 }
 
 //CreateBandWorker creates new bands in the DB and adds the creator as the first member.

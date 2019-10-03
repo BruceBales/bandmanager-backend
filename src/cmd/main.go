@@ -26,15 +26,19 @@ func main() {
 	//that modify database content
 	createBandChan := make(chan access.CreateBandJob)
 	editBandChan := make(chan access.EditBandJob)
+	memJobChan := make(chan access.MemberJob)
 	//Spawn band creation worker
 	wg.Add(1)
 	go access.CreateBandWorker(createBandChan, wg, db)
 	wg.Add(1)
 	go access.EditBandWorker(editBandChan, wg, db)
+	wg.Add(1)
+	go access.MemberWorker(memJobChan, wg, db)
 
 	channels := access.WorkerChannels{
 		CreateBandChan: createBandChan,
 		EditBandChan:   editBandChan,
+		MemberChan:     memJobChan,
 	}
 
 	//Start HTTP server

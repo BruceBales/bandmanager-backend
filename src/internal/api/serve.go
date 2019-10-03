@@ -53,6 +53,34 @@ func Serve(channels access.WorkerChannels, db *sql.DB) {
 		fmt.Fprintf(w, "Success")
 	})
 
+	//Edit Member Endpoint
+	http.HandleFunc("/band/member", func(w http.ResponseWriter, r *http.Request) {
+		//Scan JSON into MemberJob struct
+		membJob := access.MemberJob{}
+		d := json.NewDecoder(r.Body)
+		err := d.Decode(&membJob)
+		if err != nil {
+			fmt.Fprintf(w, "Invalid JSON")
+		}
+
+		//Validate user session
+		sess := r.Header.Get("session_id")
+		user, err := access.GetUser(sess, db)
+		if err != nil {
+			fmt.Fprintf(w, "Error getting user info")
+		}
+		membJob.UserID = user.ID
+
+		//Get user info for modified member
+		membJob.Member, err = access.GetUserByID(membJob.MemberID, db)
+		if err != nil {
+			fmt.Fprintf(w, "Failed to get user ID: %v", membJob.MemberID)
+			fmt.Println("Failed to get user ID ", membJob.MemberID, "Error: ", err)
+		}
+		channels.MemberChan <- membJob
+		fmt.Fprintf(w, "Success")
+	})
+
 	//Get Band Endpoint
 	http.HandleFunc("/band/info", func(w http.ResponseWriter, r *http.Request) {
 		req := access.BandInfoRequest{}
