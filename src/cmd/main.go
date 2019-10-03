@@ -27,13 +27,15 @@ func main() {
 	createBandChan := make(chan access.CreateBandJob)
 	editBandChan := make(chan access.EditBandJob)
 	memJobChan := make(chan access.MemberJob)
+	responseChan := make(chan access.Response)
+
 	//Spawn band creation worker
 	wg.Add(1)
 	go access.CreateBandWorker(createBandChan, wg, db)
 	wg.Add(1)
 	go access.EditBandWorker(editBandChan, wg, db)
 	wg.Add(1)
-	go access.MemberWorker(memJobChan, wg, db)
+	go access.MemberWorker(memJobChan, responseChan, wg, db)
 
 	channels := access.WorkerChannels{
 		CreateBandChan: createBandChan,
@@ -42,5 +44,5 @@ func main() {
 	}
 
 	//Start HTTP server
-	api.Serve(channels, db)
+	api.Serve(channels, responseChan, db)
 }

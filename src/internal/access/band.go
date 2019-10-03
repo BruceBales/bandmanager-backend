@@ -24,6 +24,7 @@ type EditBandJob struct {
 }
 
 type MemberJob struct {
+	JobID    int64
 	Action   string       `json:"action"`
 	UserID   int          `json:"user_id"` //User that is adding the new member
 	BandID   int          `json:"band_id"` //Band that the new member is being added to
@@ -39,8 +40,9 @@ type BandInfoRequest struct {
 
 //MemberWorker performs editing operations on the bands_members table
 //In the future I will probably condense other worker functions into a similar model
-func MemberWorker(j <-chan MemberJob, wg *sync.WaitGroup, db *sql.DB) error {
+func MemberWorker(j <-chan MemberJob, r chan<- Response, wg *sync.WaitGroup, db *sql.DB) error {
 	for job := range j {
+		resp := Response{}
 		//Get requester's ACL
 		var acl int
 		rows, err := db.Query("SELECT acl FROM prim.bands_members WHERE user_id = ? and band_id = ?", job.UserID, job.BandID)
@@ -72,6 +74,12 @@ func MemberWorker(j <-chan MemberJob, wg *sync.WaitGroup, db *sql.DB) error {
 			}
 		default:
 			fmt.Println("Unrecognized action: ", job.Action)
+		}
+		r <- Response{
+			JobID:    job.JobID,
+			Err:      nil,
+			Message:  fmt.Sprintf("Action: %s, UserID: %v, BandID: %v", job.Action, job.MemberID, job.BandID),
+			HTTPCode: 200,
 		}
 	}
 	wg.Done()

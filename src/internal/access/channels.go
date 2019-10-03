@@ -5,3 +5,10 @@ type WorkerChannels struct {
 	EditBandChan   chan EditBandJob
 	MemberChan     chan MemberJob
 }
+
+type Response struct {
+	JobID    int64
+	Err      error
+	Message  string
+	HTTPCode int
+}

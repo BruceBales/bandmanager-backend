@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/brucebales/bandmanager-backend/src/internal/access"
 	"github.com/brucebales/bandmanager-backend/src/internal/auth"
 )
 
 //Serve handles actual HTTP connections to the API
-func Serve(channels access.WorkerChannels, db *sql.DB) {
+func Serve(channels access.WorkerChannels, responseChan <-chan access.Response, db *sql.DB) {
 	/* --- Root Endpoint --- */
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Invalid path")
@@ -57,6 +58,7 @@ func Serve(channels access.WorkerChannels, db *sql.DB) {
 	http.HandleFunc("/band/member", func(w http.ResponseWriter, r *http.Request) {
 		//Scan JSON into MemberJob struct
 		membJob := access.MemberJob{}
+		membJob.JobID = time.Now().Unix()
 		d := json.NewDecoder(r.Body)
 		err := d.Decode(&membJob)
 		if err != nil {
@@ -78,7 +80,13 @@ func Serve(channels access.WorkerChannels, db *sql.DB) {
 			fmt.Println("Failed to get user ID ", membJob.MemberID, "Error: ", err)
 		}
 		channels.MemberChan <- membJob
-		fmt.Fprintf(w, "Success")
+		for resp := range responseChan {
+			if resp.JobID == membJob.JobID {
+				fmt.Fprintf(w, resp.Message)
+				w.WriteHeader(resp.HTTPCode)
+				return
+			}
+		}
 	})
 
 	//Get Band Endpoint
