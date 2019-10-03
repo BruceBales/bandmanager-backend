@@ -42,7 +42,6 @@ type BandInfoRequest struct {
 //In the future I will probably condense other worker functions into a similar model
 func MemberWorker(j <-chan MemberJob, r chan<- Response, wg *sync.WaitGroup, db *sql.DB) error {
 	for job := range j {
-		resp := Response{}
 		//Get requester's ACL
 		var acl int
 		rows, err := db.Query("SELECT acl FROM prim.bands_members WHERE user_id = ? and band_id = ?", job.UserID, job.BandID)
